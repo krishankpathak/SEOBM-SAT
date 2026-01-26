@@ -7,12 +7,6 @@ __pycache__/
 venv/
 .env/
 
-# Data (DO NOT PUSH RAW DATA)
-data/
-datasets/
-outputs/
-results/
-
 # ML / DL artifacts
 *.h5
 *.pt
@@ -29,4 +23,8 @@ results/
 # OS
 .DS_Store
 Thumbs.db
+# Data (ignore all real data)
+data/*
 
+# Allow placeholder only
+!data/README.md
