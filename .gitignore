@@ -2,18 +2,28 @@
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
 
-# Virtual environment
+# Virtual environments
 venv/
 .env/
 
-# Data / outputs
-*.csv
-*.xlsx
+# Data (DO NOT PUSH RAW DATA)
+data/
+datasets/
+outputs/
+results/
+
+# ML / DL artifacts
 *.h5
 *.pt
 *.pth
+*.ckpt
+*.joblib
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
 *.log
 
 # OS
