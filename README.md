@@ -3,7 +3,9 @@
 **A Temporal Representation for Learning-Based Orbital Behavior Modeling**
 
 Author: **Krishan Kant Pathak**
-CO-Author: **Subodh Kushwaha**
+
+*Note: A Hindi version of this paper was presented at the All India Hindi Technical Conference organized by ISRO at U R Rao Satellite Centre, Bengaluru, from 5–6 February 2026.*
+
 ---
 
 # Overview
@@ -327,13 +329,13 @@ The experimental setup uses a **two-layer data strategy**:
 
 Publicly available Starlink satellite data is used only to define **realistic orbital regimes** such as altitude and inclination ranges.
 
-This data is **not used for training or evaluation.** 
+This data is **not used for training or evaluation.**
 
 ---
 
 ### Layer-1: Synthetic Orbital Trajectories
 
-All experiments are performed using **synthetic trajectories generated through simplified orbital propagation models.** 
+All experiments are performed using **synthetic trajectories generated through simplified orbital propagation models.**
 
 Synthetic data allows:
 
