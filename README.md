@@ -3,8 +3,9 @@
 **A Temporal Representation for Learning-Based Orbital Behavior Modeling**
 
 Author: **Krishan Kant Pathak**
+CO-Author: **Subodh Kushwaha**
 
-*Note: A Hindi version of this paper was presented at the All India Hindi Technical Conference organized by ISRO at U R Rao Satellite Centre, Bengaluru, from 5–6 February 2026.*
+*Note: A Hindi version of this paper was presented and published at the All India Hindi Technical Conference organized by ISRO at U R Rao Satellite Centre, Bengaluru, from 5–6 February 2026.*
 
 ---
 
