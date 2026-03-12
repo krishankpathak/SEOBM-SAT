@@ -1,37 +1,34 @@
 # SEOBM: Self-Evolving Orbital Behavior Map
 
-This repository contains the research code accompanying the paper:
+**A Temporal Representation for Learning-Based Orbital Behavior Modeling**
 
-**“SEOBM: A Temporal Representation for Learning-Based Orbital Behavior Modeling”**
-by **Krishan Kant Pathak and Subodh Kushwaha**
-
-The project explores a representation learning approach for modeling orbital dynamics over time. The core contribution is the **Self-Evolving Orbital Behavior Map (SEOBM)** — a structured temporal representation that captures orbital evolution using physically interpretable features.
-
+Author: **Krishan Kant Pathak**
+CO-Author: **Subodh Kushwaha**
 ---
 
-# Project Motivation
+# Overview
 
-Space Situational Awareness (SSA) increasingly involves analyzing complex orbital behavior in environments with growing satellite density. Traditional orbital mechanics provides accurate physical models, but integrating these dynamics into **learning-based systems** remains challenging.
+This repository contains the implementation accompanying the research work:
 
-Most machine learning pipelines rely on instantaneous orbital state vectors such as:
+**“SEOBM: A Temporal Representation for Learning-Based Orbital Behavior Modeling.”**
+
+The project introduces **SEOBM (Self-Evolving Orbital Behavior Map)**, a structured representation designed to capture **orbital dynamics over time** in a format suitable for machine learning models.
+
+Traditional orbital analysis typically relies on instantaneous state vectors such as:
 
 * Cartesian position and velocity
 * Orbital elements
 * Short state sequences
 
-While effective for local predictions, these representations often fail to capture **long-term temporal behavior** required for:
+While these representations work well for physics-based propagation and short-term prediction, they often struggle when used with learning algorithms that must reason about **temporal patterns or long-term behavior**.
 
-* delayed prediction
-* maneuver pattern recognition
-* multi-agent coordination tasks
-
-SEOBM addresses this by introducing a **fixed-dimension temporal tensor representation** derived from physically interpretable orbital features.
+SEOBM addresses this by organizing physically interpretable orbital features across a **sliding temporal memory window**, producing a fixed-size tensor representation that learning models can process effectively.
 
 ---
 
 # Self-Evolving Orbital Behavior Map (SEOBM)
 
-SEOBM converts orbital state vectors into a temporal representation:
+SEOBM converts orbital state vectors into a temporal tensor representation:
 
 ```
 SEOBM(t) ∈ ℝ^(F × K)
@@ -39,151 +36,361 @@ SEOBM(t) ∈ ℝ^(F × K)
 
 Where:
 
-* **F** = number of behavior features
-* **K** = memory window size
+* **F** = number of orbital behavior features
+* **K** = memory window length
 
-Each column corresponds to a feature vector derived from an orbital state.
+Each column represents a feature vector derived from the orbital state at a specific time step.
 
-The feature vector used in this work includes:
+The features used in this work are:
+
+* Orbital speed
+* Radial distance
+* Angular momentum magnitude
+* Radial velocity component
+
+These are computed deterministically from Cartesian position and velocity vectors.
+
+The representation evolves using a **sliding window**, allowing models to access recent orbital history without modifying the underlying physical dynamics.
+
+---
+
+# Repository Structure
+
+```
+SEOBM-SAT
+│
+├── README.md
+│
+├── data/
+│   └── README.md
+│
+└── src/
+    │
+    ├── ablations/
+    │   └── memory_ablation.py
+    │
+    ├── analysis/
+    │   ├── plot_learning_curves.py
+    │   └── plot_memory_ablation.py
+    │
+    ├── envs/
+    │   ├── orbital_marl_env.py
+    │   └── orbital_marl_env_v2.py
+    │
+    ├── features/
+    │   ├── behavior_features.py
+    │   └── normalization.py
+    │
+    ├── models/
+    │   ├── baseline_mlp.py
+    │   ├── mappo_actor_critic.py
+    │   ├── seobm_encoder.py
+    │   └── seobm_lstm.py
+    │
+    ├── parsers/
+    │   ├── parse_starlink.py
+    │   └── tle_utils.py
+    │
+    ├── physics/
+    │   ├── noise_models.py
+    │   ├── propagation.py
+    │   └── velocity_reconstruction.py
+    │
+    ├── rl/
+    │   └── simple_policy_gradient.py
+    │
+    ├── seobm/
+    │   └── seobm_tensor.py
+    │
+    ├── tasks/
+    │
+    ├── run_feature_extraction.py
+    ├── run_layer1_pipeline.py
+    ├── run_learning_demo.py
+    ├── run_learning_demo_delayed.py
+    ├── run_learning_demo_normalized.py
+    ├── run_mappo_seobm_demo.py
+    ├── run_mappo_seobm_train.py
+    └── run_seobm_build.py
+```
+
+---
+
+# Core Components
+
+## Physics and Orbital Dynamics
+
+`src/physics/`
+
+Implements simplified orbital propagation models used for generating synthetic trajectories.
+
+Includes:
+
+* orbital propagation
+* velocity reconstruction
+* noise modeling for trajectory variability
+
+These modules allow the project to simulate orbital motion under controlled experimental conditions.
+
+---
+
+## Feature Extraction
+
+`src/features/`
+
+Responsible for computing physically interpretable orbital behavior features.
+
+Key modules:
+
+**behavior_features.py**
+
+Extracts features from orbital states:
 
 * orbital speed
 * radial distance
 * angular momentum magnitude
-* radial velocity component
+* radial velocity
 
-These features are computed deterministically from Cartesian states.
+**normalization.py**
 
-The representation evolves through a **sliding memory window**, preserving recent orbital behavior.
-
----
-
-# Repository Contents
-
-### src/
-
-Core implementation of the SEOBM representation and learning pipelines.
-
-Modules include:
-
-* feature extraction
-* SEOBM construction
-* normalization
-* baseline prediction models
-* reinforcement learning integration
+Implements feature normalization used during learning experiments.
 
 ---
 
-### notebooks/
+## SEOBM Representation
 
-Exploratory notebooks for:
+`src/seobm/seobm_tensor.py`
 
-* trajectory generation
-* SEOBM tensor visualization
-* experiment analysis
+Constructs the **Self-Evolving Orbital Behavior Map** by stacking feature vectors across a sliding temporal window.
 
-These notebooks help reproduce figures and experimental insights from the paper.
+This module defines the tensor construction pipeline used throughout experiments.
 
 ---
 
-### scripts/
+## Machine Learning Models
 
-Utility scripts for running experiments and generating synthetic orbital trajectories.
+`src/models/`
+
+Contains baseline and SEOBM-based learning architectures.
+
+Includes:
+
+**baseline_mlp.py**
+
+Memoryless baseline model that receives only the current feature vector.
+
+**seobm_lstm.py**
+
+Temporal model that processes SEOBM tensors.
+
+**seobm_encoder.py**
+
+Feature encoding layer used for learning pipelines.
+
+**mappo_actor_critic.py**
+
+Actor-critic architecture used in multi-agent reinforcement learning experiments.
 
 ---
 
-### docs/
+## Reinforcement Learning
 
-Supporting documentation summarizing methodology and experimental design.
+`src/rl/`
+
+Contains reinforcement learning utilities used in the MARL demonstrations.
+
+`simple_policy_gradient.py` provides a lightweight implementation for policy optimization.
+
+---
+
+## Multi-Agent Environments
+
+`src/envs/`
+
+Defines synthetic orbital multi-agent environments used for reinforcement learning demonstrations.
+
+Examples include:
+
+* simplified orbital interaction environments
+* coordination reward structures for agents
+
+These environments are intentionally simplified and are used only for representation experiments.
+
+---
+
+## Experiment Runners
+
+The repository provides several runnable experiment pipelines located directly in `src/`.
+
+### Feature Extraction
+
+```
+python src/run_feature_extraction.py
+```
+
+Computes orbital behavior features from trajectory data.
+
+---
+
+### SEOBM Construction
+
+```
+python src/run_seobm_build.py
+```
+
+Builds SEOBM tensors from extracted feature sequences.
+
+---
+
+### Synthetic Trajectory Pipeline
+
+```
+python src/run_layer1_pipeline.py
+```
+
+Generates synthetic orbital trajectories used in experiments.
+
+---
+
+### Supervised Learning Demonstrations
+
+Short-horizon prediction:
+
+```
+python src/run_learning_demo.py
+```
+
+Delayed prediction task:
+
+```
+python src/run_learning_demo_delayed.py
+```
+
+Normalized learning experiment:
+
+```
+python src/run_learning_demo_normalized.py
+```
+
+---
+
+### Multi-Agent Reinforcement Learning
+
+MAPPO demonstration:
+
+```
+python src/run_mappo_seobm_demo.py
+```
+
+MAPPO training pipeline:
+
+```
+python src/run_mappo_seobm_train.py
+```
+
+---
+
+# Ablation Studies
+
+`src/ablations/memory_ablation.py`
+
+This experiment evaluates the impact of **memory window size K** on prediction performance.
+
+It demonstrates how increasing temporal context improves learning in delayed prediction tasks.
+
+---
+
+# Analysis and Visualization
+
+`src/analysis/`
+
+Includes scripts used to generate plots and analyze training results.
+
+Examples:
+
+```
+python src/analysis/plot_learning_curves.py
+python src/analysis/plot_memory_ablation.py
+```
 
 ---
 
 # Dataset Policy
 
-The repository **does not include the datasets used in experiments**.
+The repository **does not contain the datasets used during experiments.**
 
-This decision is intentional and follows the methodology described in the paper.
+This is intentional and follows the methodology described in the research paper.
 
-The experimental pipeline uses a **two-layer data strategy**:
+The experimental setup uses a **two-layer data strategy**:
 
-### Layer-2: Real-World Anchor Data
+### Layer-2: Real Satellite Data
 
-Publicly available Starlink satellite geodetic data is used only to define realistic orbital regimes such as altitude and inclination ranges.
-It is **not used for model training or evaluation**. 
+Publicly available Starlink satellite data is used only to define **realistic orbital regimes** such as altitude and inclination ranges.
 
-### Layer-1: Synthetic Trajectory Generation
+This data is **not used for training or evaluation.** 
 
-All training and evaluation experiments rely on **synthetic orbital trajectories generated through simplified propagation models**. 
+---
 
-Synthetic generation ensures:
+### Layer-1: Synthetic Orbital Trajectories
 
-* full control of ground truth
+All experiments are performed using **synthetic trajectories generated through simplified orbital propagation models.** 
+
+Synthetic data allows:
+
 * reproducible experiments
+* full control of ground truth
 * isolation of representation effects
 
 ---
 
 # Why the `data/` Folder Is Empty
 
-The `data/` directory is included only as a placeholder.
+The `data/` directory exists only as a placeholder.
 
-Real datasets are not stored in this repository because:
+Large datasets and generated trajectories are not stored in the repository because:
 
-* large datasets exceed Git repository limits
-* experiments rely primarily on synthetic trajectories
-* real-world satellite data is used only as a reference for orbital regimes
-
-Instructions for regenerating trajectories are provided in the scripts directory.
+* Git repositories are not designed to store large datasets
+* experiments rely on synthetic trajectory generation
+* datasets can be reproduced using the provided pipelines
 
 ---
 
-# Reproducing Experiments
+# Scope of This Work
 
-Install dependencies:
+This project focuses on **representation learning for orbital behavior modeling.**
 
-```
-pip install -r requirements.txt
-```
-
-Generate synthetic trajectories:
-
-```
-python scripts/generate_synthetic_orbits.py
-```
-
-Run supervised learning experiments:
-
-```
-python scripts/run_experiments.py
-```
-
----
-
-# Experimental Scope
-
-All experiments in this repository are designed for **representation learning research**.
-
-The work **does not propose**:
+The repository **does not propose**:
 
 * operational SSA systems
 * collision avoidance algorithms
 * satellite control policies
+* real-world safety guarantees
 
-Results should be interpreted only within controlled experimental settings.
-
----
-
-# Research Scope
-
-SEOBM should be viewed as a **representational abstraction** for learning-based orbital analysis rather than a deployable system.
-
-The repository is intended to provide:
-
-* reproducible experiments
-* a structured temporal representation
-* a foundation for further research at the intersection of astrodynamics and machine learning.
+The experiments are conducted entirely in **controlled synthetic environments** and should be interpreted accordingly.
 
 ---
 
-# License
+# Reproducibility
 
-This project is released for research and academic use.
+All experiments can be reproduced using the code provided in this repository.
+
+The design intentionally separates:
+
+* orbital physics
+* feature representation
+* learning pipelines
+
+This allows researchers to isolate the effects of temporal representation when studying orbital behavior.
+
+---
+
+# Future Work
+
+Possible extensions include:
+
+* richer orbital feature sets
+* higher-fidelity propagation models
+* uncertainty-aware learning methods
+* integration with real observational datasets
+
+SEOBM provides a foundation for further research at the intersection of **astrodynamics and machine learning**.
