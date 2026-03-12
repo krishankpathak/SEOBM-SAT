@@ -9,7 +9,7 @@ The Self-Evolving Orbital Behavior Map (SEOBM) is a structured temporal represen
 
 This codebase is **not** an operational SSA system and makes **no claims** regarding collision avoidance, satellite control, or real-world deployment.
 
----
+----
 
 ## Repository Structure
 
